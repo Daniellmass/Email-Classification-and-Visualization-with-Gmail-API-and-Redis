@@ -40,7 +40,7 @@ def authenticate_gmail():
     
     return build('gmail', 'v1', credentials=creds)
 
-def get_emails(service, limit=100):
+def get_emails(service, limit=5):
     """Fetch email subjects and senders."""
     results = service.users().messages().list(userId='me', maxResults=limit).execute()
     messages = results.get('messages', [])
@@ -57,7 +57,7 @@ def get_emails(service, limit=100):
 
 
 # GPT4All Integration
-model = GPT4All("Nous-Hermes-2-Mistral-7B-DPO")
+model = GPT4All("Meta-Llama-3-8B-Instruct.Q4_0") 
 
 def classify_email(subject, sender):
     """Classify email using LLM."""
