@@ -67,9 +67,14 @@ def classify_email(subject, sender):
         return cached_result
 
     prompt = f"Classify: {subject} by {sender}. Options: Work, School, Shopping. Rank: Urgent, Important, Normal. Response needed: Yes/No."
-    response = model.predict(prompt, max_tokens=50)
-    cache_data(cache_key, response)
-    return response
+    
+    # Use the generate method correctly
+    response = model.generate(prompt, max_tokens=15)  # Generate text
+    response_text = response.strip()  # Clean up any extra whitespace
+    
+    # Cache the response
+    cache_data(cache_key, response_text)
+    return response_text
 
 
 # Redis Cache Functions
@@ -104,7 +109,7 @@ def main():
     service = authenticate_gmail()
 
     # Fetch emails
-    email_data = get_emails(service, limit=100)
+    email_data = get_emails(service, limit=15)
 
     # Classify emails using LLM
     classified_emails = []
