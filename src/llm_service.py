@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 from gpt4all import GPT4All
 from src.redis_cache import get_cached_data, cache_data
 
@@ -14,3 +15,6 @@ def classify_email(subject, sender):
     response = model.predict(prompt, max_tokens=50)
     cache_data(cache_key, response)
     return response
+=======
+ÿþ
+>>>>>>> 4d56f5b5800e5ff2a07cfe61a5fdca460250fe87

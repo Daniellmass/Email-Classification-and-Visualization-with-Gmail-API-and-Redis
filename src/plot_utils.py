@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import matplotlib.pyplot as plt
 
 def plot_email_categories(email_data):
@@ -9,3 +10,6 @@ def plot_email_categories(email_data):
     plt.pie(categories.values(), labels=categories.keys(), autopct='%1.1f%%')
     plt.title("Email Categories")
     plt.show()
+=======
+ÿþ
+>>>>>>> 4d56f5b5800e5ff2a07cfe61a5fdca460250fe87

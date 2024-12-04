@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import os
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -33,3 +34,6 @@ def get_emails(service, limit=100):
         sender = next((header['value'] for header in headers if header['name'] == 'From'), "Unknown Sender")
         email_data.append({'subject': subject, 'sender': sender})
     return email_data
+=======
+ÿþ
+>>>>>>> 4d56f5b5800e5ff2a07cfe61a5fdca460250fe87
