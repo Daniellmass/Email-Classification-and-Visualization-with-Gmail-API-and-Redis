@@ -91,15 +91,42 @@ def get_cached_data(key):
     return json.loads(data) if data else None
 
 
-# Email Category Plotting
 def plot_email_categories(email_data):
-    categories = {}
+    """Plot email categories with two simplified pie charts."""
+    # Group emails into categories
+    category_counts = {}
+    urgency_counts = {"Urgent": 0, "Important": 0, "Normal": 0}
+
     for email in email_data:
-        category = email['classification'].split(",")[0].strip()
-        categories[category] = categories.get(category, 0) + 1
-    plt.figure(figsize=(8, 6))
-    plt.pie(categories.values(), labels=categories.keys(), autopct='%1.1f%%')
+        # Parse the classification
+        classification_parts = email['classification'].split(",")
+        category = classification_parts[0].strip()  # First part is the category
+        urgency = classification_parts[1].strip() if len(classification_parts) > 1 else "Normal"  # Second part is urgency
+
+        # Count categories
+        category_counts[category] = category_counts.get(category, 0) + 1
+
+        # Count urgency levels
+        if urgency in urgency_counts:
+            urgency_counts[urgency] += 1
+
+    # Simplify category names and counts
+    category_names = list(category_counts.keys())
+    category_values = list(category_counts.values())
+
+    urgency_names = list(urgency_counts.keys())
+    urgency_values = list(urgency_counts.values())
+
+    # Create first pie chart: Categories
+    plt.figure(figsize=(6, 6))
+    plt.pie(category_values, labels=category_names, autopct='%1.1f%%', startangle=140)
     plt.title("Email Categories")
+    plt.show()
+
+    # Create second pie chart: Urgency Levels
+    plt.figure(figsize=(6, 6))
+    plt.pie(urgency_values, labels=urgency_names, autopct='%1.1f%%', startangle=140)
+    plt.title("Email Urgency Levels")
     plt.show()
 
 
