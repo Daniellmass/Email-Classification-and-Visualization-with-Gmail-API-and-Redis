@@ -66,11 +66,19 @@ def classify_email(subject, sender):
     if cached_result:
         return cached_result
 
-    prompt = f"Classify: {subject} by {sender}. Options: Work, School, Shopping. Rank: Urgent, Important, Normal. Response needed: Yes/No."
+    prompt = (
+        f"Classify the following email: Subject: {subject}, Sender: {sender}. "
+        "Analyze: Category (Work, School, Shopping), Urgency (Urgent, Important, Normal), Response needed (Yes/No). "
+        "Provide the analysis in a structured format: 'Category, Urgency, Response'."
+    )
     
-    # Use the generate method correctly
-    response = model.generate(prompt, max_tokens=30)  # Generate text
-    response_text = response.strip()  # Clean up any extra whitespace
+    response = model.generate(prompt, max_tokens=75)
+    response_text = response.strip()
+
+    # Validate the response format
+    if len(response_text.split(",")) < 3:
+        # Return default values if the response is not in the expected format
+        return "Unknown, Normal, No"
     
     # Cache the response
     cache_data(cache_key, response_text)
@@ -91,39 +99,65 @@ def get_cached_data(key):
     return json.loads(data) if data else None
 
 
+def classify_email(subject, sender):
+    """Classify email using LLM."""
+    cache_key = f"email:{subject}:{sender}"
+    cached_result = get_cached_data(cache_key)
+    if cached_result:
+        return cached_result
+
+    prompt = (
+        f"Classify the following email: Subject: {subject}, Sender: {sender}. "
+        "Analyze: Category (Work, School, Shopping), Urgency (Urgent, Important, Normal), Response needed (Yes/No). "
+        "Provide the analysis in a structured format: 'Category, Urgency, Response'."
+    )
+    
+    response = model.generate(prompt, max_tokens=50)
+    response_text = response.strip()
+    print(f"GPT Response: {response_text}")  # Debugging output
+
+    # Validate the response format
+    if len(response_text.split(",")) < 3:
+        # Return default values if the response is not in the expected format
+        return "Unknown, Normal, No"
+    
+    # Cache the response
+    cache_data(cache_key, response_text)
+    return response_text
+
+
 def plot_email_categories(email_data):
-    """Plot email categories with two simplified pie charts."""
-     # Update font settings to avoid missing glyphs
+    """Plot email categories: sender distribution and urgency levels."""
+    # Update font settings to avoid missing glyphs
     plt.rcParams['font.sans-serif'] = ['Arial']
     plt.rcParams['axes.unicode_minus'] = False
-    # Group emails into categories
-    category_counts = {}
+
+    # Count occurrences of each sender
+    sender_counts = {}
     urgency_counts = {"Urgent": 0, "Important": 0, "Normal": 0}
 
     for email in email_data:
-        # Parse the classification
-        classification_parts = email['classification'].split(",")
-        category = classification_parts[0].strip()  # First part is the category
-        urgency = classification_parts[1].strip() if len(classification_parts) > 1 else "Normal"  # Second part is urgency
-
-        # Count categories
-        category_counts[category] = category_counts.get(category, 0) + 1
+        # Count senders
+        sender = email['sender']
+        sender_counts[sender] = sender_counts.get(sender, 0) + 1
 
         # Count urgency levels
+        urgency = email['urgency']
         if urgency in urgency_counts:
             urgency_counts[urgency] += 1
 
-    # Simplify category names and counts
-    category_names = list(category_counts.keys())
-    category_values = list(category_counts.values())
+    # Simplify sender names and counts
+    sender_names = list(sender_counts.keys())
+    sender_values = list(sender_counts.values())
 
+    # Urgency distribution
     urgency_names = list(urgency_counts.keys())
     urgency_values = list(urgency_counts.values())
 
-    # Create first pie chart: Categories
+    # Create first pie chart: Sender distribution
     plt.figure(figsize=(6, 6))
-    plt.pie(category_values, labels=category_names, autopct='%1.1f%%', startangle=140)
-    plt.title("Email Categories")
+    plt.pie(sender_values, labels=sender_names, autopct='%1.1f%%', startangle=140)
+    plt.title("Email Sender Distribution")
     plt.show()
 
     # Create second pie chart: Urgency Levels
@@ -145,18 +179,36 @@ def main():
     for email in email_data:
         subject = email['subject']
         sender = email['sender']
-        classification = classify_email(subject, sender)
-        email['classification'] = classification
+        try:
+            classification = classify_email(subject, sender)
+            classification_parts = classification.split(",")
+            category = classification_parts[0].strip() if len(classification_parts) > 0 else "Unknown"
+            urgency = classification_parts[1].strip() if len(classification_parts) > 1 else "Normal"
+            response_needed = classification_parts[2].strip() if len(classification_parts) > 2 else "No"
+        except Exception as e:
+            # Handle unexpected errors during classification
+            print(f"Error classifying email: {subject}. Error: {e}")
+            category, urgency, response_needed = "Unknown", "Normal", "No"
+
+        # Add the classification results to the email dictionary
+        email['category'] = category
+        email['urgency'] = urgency
+        email['response_needed'] = response_needed
+        email['classification'] = f"{category}, {urgency}, {response_needed}"
         classified_emails.append(email)
 
-        # Print email details
+        # Print email details to console
+        print("-" * 40)
         print(f"Subject: {subject}")
         print(f"Sender: {sender}")
-        print(f"Classification: {classification}")
+        print(f"Category: {category}")
+        print(f"Urgency: {urgency}")
+        print(f"Response Needed: {response_needed}")
         print("-" * 40)
 
     # Plot results
     plot_email_categories(classified_emails)
+
 
 if __name__ == '__main__':
     main()
