@@ -69,7 +69,7 @@ def classify_email(subject, sender):
     prompt = f"Classify: {subject} by {sender}. Options: Work, School, Shopping. Rank: Urgent, Important, Normal. Response needed: Yes/No."
     
     # Use the generate method correctly
-    response = model.generate(prompt, max_tokens=15)  # Generate text
+    response = model.generate(prompt, max_tokens=30)  # Generate text
     response_text = response.strip()  # Clean up any extra whitespace
     
     # Cache the response
@@ -93,6 +93,9 @@ def get_cached_data(key):
 
 def plot_email_categories(email_data):
     """Plot email categories with two simplified pie charts."""
+     # Update font settings to avoid missing glyphs
+    plt.rcParams['font.sans-serif'] = ['Arial']
+    plt.rcParams['axes.unicode_minus'] = False
     # Group emails into categories
     category_counts = {}
     urgency_counts = {"Urgent": 0, "Important": 0, "Normal": 0}
@@ -130,13 +133,12 @@ def plot_email_categories(email_data):
     plt.show()
 
 
-# Main Function to run the process
 def main():
     # Authenticate and get Gmail service object
     service = authenticate_gmail()
 
     # Fetch emails
-    email_data = get_emails(service, limit=15)
+    email_data = get_emails(service, limit=5)
 
     # Classify emails using LLM
     classified_emails = []
@@ -146,6 +148,12 @@ def main():
         classification = classify_email(subject, sender)
         email['classification'] = classification
         classified_emails.append(email)
+
+        # Print email details
+        print(f"Subject: {subject}")
+        print(f"Sender: {sender}")
+        print(f"Classification: {classification}")
+        print("-" * 40)
 
     # Plot results
     plot_email_categories(classified_emails)
