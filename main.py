@@ -125,34 +125,37 @@ def classify_email(subject, sender):
     cache_data(cache_key, response_text)
     return response_text
 
-
 def plot_email_categories(email_data):
-    """Plot email categories: sender distribution and urgency levels."""
+    """Plot email categories: sender distribution and subject length distribution."""
     # Update font settings to avoid missing glyphs
     plt.rcParams['font.sans-serif'] = ['Arial']
     plt.rcParams['axes.unicode_minus'] = False
 
     # Count occurrences of each sender
     sender_counts = {}
-    urgency_counts = {"Urgent": 0, "Important": 0, "Normal": 0}
+    subject_length_counts = {"Short": 0, "Medium": 0, "Long": 0}
 
     for email in email_data:
         # Count senders
         sender = email['sender']
         sender_counts[sender] = sender_counts.get(sender, 0) + 1
 
-        # Count urgency levels
-        urgency = email['urgency']
-        if urgency in urgency_counts:
-            urgency_counts[urgency] += 1
+        # Count subject length
+        subject_length = len(email['subject'])
+        if subject_length <= 30:
+            subject_length_counts["Short"] += 1
+        elif 31 <= subject_length <= 60:
+            subject_length_counts["Medium"] += 1
+        else:
+            subject_length_counts["Long"] += 1
 
     # Simplify sender names and counts
     sender_names = list(sender_counts.keys())
     sender_values = list(sender_counts.values())
 
-    # Urgency distribution
-    urgency_names = list(urgency_counts.keys())
-    urgency_values = list(urgency_counts.values())
+    # Subject length distribution
+    subject_length_names = list(subject_length_counts.keys())
+    subject_length_values = list(subject_length_counts.values())
 
     # Create first pie chart: Sender distribution
     plt.figure(figsize=(6, 6))
@@ -160,12 +163,11 @@ def plot_email_categories(email_data):
     plt.title("Email Sender Distribution")
     plt.show()
 
-    # Create second pie chart: Urgency Levels
+    # Create second pie chart: Subject Length Distribution
     plt.figure(figsize=(6, 6))
-    plt.pie(urgency_values, labels=urgency_names, autopct='%1.1f%%', startangle=140)
-    plt.title("Email Urgency Levels")
+    plt.pie(subject_length_values, labels=subject_length_names, autopct='%1.1f%%', startangle=140)
+    plt.title("Subject Length Distribution")
     plt.show()
-
 
 def main():
     # Authenticate and get Gmail service object
@@ -176,6 +178,7 @@ def main():
 
     # Classify emails using LLM
     classified_emails = []
+    allowed_categories = ["Work", "Shopping", "Social", "Personal"]  # Allowed categories
     for email in email_data:
         subject = email['subject']
         sender = email['sender']
@@ -189,6 +192,10 @@ def main():
             # Handle unexpected errors during classification
             print(f"Error classifying email: {subject}. Error: {e}")
             category, urgency, response_needed = "Unknown", "Normal", "No"
+
+        # Ensure category is one of the allowed ones
+        if category not in allowed_categories:
+            category = "Personal"
 
         # Add the classification results to the email dictionary
         email['category'] = category
