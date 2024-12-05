@@ -174,7 +174,7 @@ def main():
     service = authenticate_gmail()
 
     # Fetch emails
-    email_data = get_emails(service, limit=5)
+    email_data = get_emails(service, limit=15)
 
     # Classify emails using LLM
     classified_emails = []
